@@ -13,33 +13,151 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 	).addTo(map);
 
+	map.pm.addControls({
+        position:'topleft',
+        // Customize the visible tools
+        editControls:false,
+        drawRectangle:false,
+        drawCircle:false,
+        drawCircleMarker:false,
+        drawText:false
+      });
+
+      map.pm.setGlobalOptions({
+        pathOptions: {
+          weight: 2,
+          color: "#4d4d4d",
+          fillColor: "#808080",
+          fillOpacity: 0.2,
+          dashArray:[4, 4]}
+      });
+
 
 	// Grab the local json query data
-	L.esri.get('./data/query.json', {}, (error, response) => {
+	// L.esri.get('https://services1.arcgis.com/NXmBVyW5TaiCXqFs/ArcGIS/rest/services/VT_Rail_Trails_Viewer_Public/FeatureServer/0', {}, (error, response) => {
 
-		if (error) {
-			return false
+	// 	if (error) {
+	// 		return false
+	// 	}
+
+	// 	// console.log(response)
+
+	// 	response.features.forEach(feature => {
+
+	// 		if (feature.properties.displayName == null) {
+	// 			return false
+	// 		}
+
+	// 		// console.log(feature)
+
+	// 		var marker = L.marker([feature.geometry.coordinates[1], feature.geometry.coordinates[0]], {
+	// 			// Marker options
+	// 		}).addTo(map);
+
+	// 		// Marker popup
+	// 		marker.bindPopup(`<p><strong>${feature.properties.displayName}</strong></p>`)
+	// 	})
+
+	// })
+
+	// L.esri.get('https://services1.arcgis.com/NXmBVyW5TaiCXqFs/ArcGIS/rest/services/VT_State_Rail_Lines_and_Trails/FeatureServer/0', {}, (error, response) => {
+
+	// 	if (error) {
+	// 		return false
+	// 	}
+
+	// 	console.log(response);
+	// })
+
+	map.createPane("bikeTrails");
+
+	const trails_to_render = [
+		'LVRT',
+		'MVRT',
+		'DHRT',
+		// 'CLP',
+		'BBRT'
+	];
+
+	var trails = L.esri.featureLayer(
+		{
+			url: "https://services1.arcgis.com/NXmBVyW5TaiCXqFs/ArcGIS/rest/services/VT_State_Rail_Lines_and_Trails/FeatureServer/0",
+			pane: 'bikeTrails',
+			fetchAllFeatures: true,
+
+			onEachFeature: (feature) => {
+				// console.log(feature)
+			},
+			style: (feature) => {
+
+				let color = 'transparent';
+				if (trails_to_render.includes(feature.properties.LineName)){
+					color = 'red'
+
+					if (feature.properties.LineName === 'LVRT') {
+						color = 'green'
+					}
+					if (feature.properties.LineName === 'MVRT') {
+						color = 'purple'
+					}
+					if (feature.properties.LineName === 'BBRT') {
+						color = 'orange'
+					}
+					if (feature.properties.LineName === 'CLP' || feature.properties.LineName === 'DHRT') {
+						color = 'blue'
+					}
+				}
+
+				return {
+				  color: color,
+				  dashArray: "5",
+				  dashOffset: "2",
+				  weight: "3"
+				};
+			  }
 		}
+	)
+	.addTo(map);
 
-		// console.log(response)
+	trails.bindPopup(function (layer) {
+		return L.Util.template("<b>{LineName}</b><br>Miles: {TotalMiles}</br>", layer.feature.properties);
+	});
 
-		response.features.forEach(feature => {
+	// var trail_lvrt_features = L.esri.featureLayer(
+	// 	{
+	// 		url: "https://services1.arcgis.com/NXmBVyW5TaiCXqFs/ArcGIS/rest/services/VT_Rail_Trails_Viewer_Public/FeatureServer/0",
+	// 		onEachFeature: (feature) => {
 
-			// if (feature.properties.displayName == null) {
-			// 	return false
-			// }
+	// 		},
+	// 	}
+	// )
+	// .addTo(map);
 
-			// console.log(feature)
+	// trail_lvrt_features.bindPopup(function (layer) {
+	// 	return L.Util.template("<b>{displayName}</b><br/>{town}, Vermont", layer.feature.properties);
+	// });
 
-			var marker = L.marker([feature.geometry.coordinates[1], feature.geometry.coordinates[0]], {
-				// Marker options
-			}).addTo(map);
+	// var trail_lvrt_area = L.esri.featureLayer(
+	// 	{
+	// 		url: "https://services1.arcgis.com/NXmBVyW5TaiCXqFs/ArcGIS/rest/services/VT_Rail_Trails_Viewer_Public/FeatureServer/2",
+	// 		simplifyFactor: 0.5,
+	// 		precision: 4,
+	// 	}
+	// )
+	// .addTo(map);
 
-			// Marker popup
-			marker.bindPopup(`<p><strong>${feature.properties.displayName}</strong></p>`)
-		})
+	// var trail_lvrt_carto = L.esri.featureLayer(
+	// 	{
+	// 		url: "https://services1.arcgis.com/NXmBVyW5TaiCXqFs/ArcGIS/rest/services/VT_Rail_Trails_Viewer_Public/FeatureServer/9",
+	// 		simplifyFactor: 0.5,
+	// 		precision: 4,
+	// 	}
+	// )
+	// .addTo(map);
 
-	})
+
+
+
 
 	// L.esri.get("./data/VTrans_RailTrail_Map_Layers", {}, function (error, response) {
     //     if (error) {
