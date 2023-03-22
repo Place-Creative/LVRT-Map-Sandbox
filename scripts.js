@@ -13,69 +13,19 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 	).addTo(map);
 
-	map.pm.addControls({
-        position:'topleft',
-        // Customize the visible tools
-        editControls:false,
-        drawRectangle:false,
-        drawCircle:false,
-        drawCircleMarker:false,
-        drawText:false
-      });
-
-      map.pm.setGlobalOptions({
-        pathOptions: {
-          weight: 2,
-          color: "#4d4d4d",
-          fillColor: "#808080",
-          fillOpacity: 0.2,
-          dashArray:[4, 4]}
-      });
-
-
-	// Grab the local json query data
-	// L.esri.get('https://services1.arcgis.com/NXmBVyW5TaiCXqFs/ArcGIS/rest/services/VT_Rail_Trails_Viewer_Public/FeatureServer/0', {}, (error, response) => {
-
-	// 	if (error) {
-	// 		return false
-	// 	}
-
-	// 	// console.log(response)
-
-	// 	response.features.forEach(feature => {
-
-	// 		if (feature.properties.displayName == null) {
-	// 			return false
-	// 		}
-
-	// 		// console.log(feature)
-
-	// 		var marker = L.marker([feature.geometry.coordinates[1], feature.geometry.coordinates[0]], {
-	// 			// Marker options
-	// 		}).addTo(map);
-
-	// 		// Marker popup
-	// 		marker.bindPopup(`<p><strong>${feature.properties.displayName}</strong></p>`)
-	// 	})
-
-	// })
-
-	// L.esri.get('https://services1.arcgis.com/NXmBVyW5TaiCXqFs/ArcGIS/rest/services/VT_State_Rail_Lines_and_Trails/FeatureServer/0', {}, (error, response) => {
-
-	// 	if (error) {
-	// 		return false
-	// 	}
-
-	// 	console.log(response);
-	// })
-
 	map.createPane("bikeTrails");
+
+	L.geoJson(statesData, {
+		color: 'red',
+		opacity: 0.2,
+		fillColor: 'red',
+		fillOpacity: 0.02
+	}).addTo(map);
 
 	const trails_to_render = [
 		'LVRT',
 		'MVRT',
 		'DHRT',
-		// 'CLP',
 		'BBRT'
 	];
 
@@ -84,7 +34,6 @@ document.addEventListener('DOMContentLoaded', () => {
 			url: "https://services1.arcgis.com/NXmBVyW5TaiCXqFs/ArcGIS/rest/services/VT_State_Rail_Lines_and_Trails/FeatureServer/0",
 			pane: 'bikeTrails',
 			fetchAllFeatures: true,
-
 			onEachFeature: (feature) => {
 				// console.log(feature)
 			},
@@ -110,8 +59,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 				return {
 				  color: color,
-				  dashArray: "5",
-				  dashOffset: "2",
+				//   dashArray: "5",
+				//   dashOffset: "2",
 				  weight: "3"
 				};
 			  }
@@ -123,41 +72,53 @@ document.addEventListener('DOMContentLoaded', () => {
 		return L.Util.template("<b>{LineName}</b><br>Miles: {TotalMiles}</br>", layer.feature.properties);
 	});
 
-	// var trail_lvrt_features = L.esri.featureLayer(
-	// 	{
-	// 		url: "https://services1.arcgis.com/NXmBVyW5TaiCXqFs/ArcGIS/rest/services/VT_Rail_Trails_Viewer_Public/FeatureServer/0",
-	// 		onEachFeature: (feature) => {
+	var LVRT_FEATURES_TRAILHEADS = L.esri.featureLayer(
+		{
+			url: "https://services1.arcgis.com/NXmBVyW5TaiCXqFs/ArcGIS/rest/services/VT_Rail_Trails_Viewer_Public/FeatureServer/0",
+			where: "HASTRAILHEAD = 1 AND hasParking = 0",
+			pointToLayer: function(geojson, latlng) {
+				return L.marker(latlng, {
+					icon: L.icon({
+						iconUrl: "./assets/icons/hiking-square.svg",
+						iconSize: [18, 18],
+						iconAnchor: [9, 9],
+						className: 'test-1'
+					})
+				})
+			}
+		}
+	)
+	.addTo(map);
 
-	// 		},
-	// 	}
-	// )
-	// .addTo(map);
+	LVRT_FEATURES_TRAILHEADS.bindPopup(function (layer) {
+		console.log('trailhead')
+		console.log(layer.feature.properties)
+		return L.Util.template(`<b>Title: {displayName}</b><br/>Description: {description}<br/>Town: {town}<br/>Type: Trailhead`, layer.feature.properties);
+	});
 
-	// trail_lvrt_features.bindPopup(function (layer) {
-	// 	return L.Util.template("<b>{displayName}</b><br/>{town}, Vermont", layer.feature.properties);
-	// });
+	var LVRT_FEATURES_PARKING = L.esri.featureLayer(
+		{
+			url: "https://services1.arcgis.com/NXmBVyW5TaiCXqFs/ArcGIS/rest/services/VT_Rail_Trails_Viewer_Public_Facilities/FeatureServer/0",
+			where: "facilityType = 11 AND isPublic = 1 AND isActive = 1 AND status = 4",
+			pointToLayer: function(geojson, latlng) {
+				return L.marker(latlng, {
+					icon: L.icon({
+						iconUrl: "./assets/icons/parking-square.svg",
+						iconSize: [18, 18],
+						iconAnchor: [9, 9],
+						className: 'test-2'
+					})
+				})
+			}
+		}
+	)
+	.addTo(map);
 
-	// var trail_lvrt_area = L.esri.featureLayer(
-	// 	{
-	// 		url: "https://services1.arcgis.com/NXmBVyW5TaiCXqFs/ArcGIS/rest/services/VT_Rail_Trails_Viewer_Public/FeatureServer/2",
-	// 		simplifyFactor: 0.5,
-	// 		precision: 4,
-	// 	}
-	// )
-	// .addTo(map);
-
-	// var trail_lvrt_carto = L.esri.featureLayer(
-	// 	{
-	// 		url: "https://services1.arcgis.com/NXmBVyW5TaiCXqFs/ArcGIS/rest/services/VT_Rail_Trails_Viewer_Public/FeatureServer/9",
-	// 		simplifyFactor: 0.5,
-	// 		precision: 4,
-	// 	}
-	// )
-	// .addTo(map);
-
-
-
-
+	LVRT_FEATURES_PARKING.bindPopup(function (layer) {
+		console.log('parking')
+		console.log(layer.feature.properties)
+		return L.Util.template(`<b>Title: {displayName}</b><br/>Description: {description}<br/>Town: {town}<br/>Type: Parking`, layer.feature.properties);
+	});
 
 	// L.esri.get("./data/VTrans_RailTrail_Map_Layers", {}, function (error, response) {
     //     if (error) {

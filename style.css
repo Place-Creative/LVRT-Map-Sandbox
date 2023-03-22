@@ -20,3 +20,10 @@ body {
 	height: 100%;
 	width: 100%;
 }
+
+#filters {
+	position: absolute;
+	top: 0.65rem;
+	left: 3rem;
+	z-index: 2000;
+}
