@@ -63,7 +63,7 @@ body {
 	object-fit: contain;
 }
 
-.leaflet-popup-content p {
+#map .leaflet-popup-content > p {
 	margin: 0.25rem 0;
 }
 
@@ -74,4 +74,19 @@ img.tooltip-image {
 	height: var(--size);
 	object-fit: contain;
 	margin-bottom: 0.25rem;
+}
+
+.milemarker span.icon {
+	--size: 0.75rem;
+	display: flex;
+	background-image: url('./assets/icons/milemarker-square.svg');
+	background-size: contain;
+	background-repeat: no-repeat;
+	background-position: center center;
+	width: var(--size);
+    height: var(--size);
+}
+
+.milemarker span.text {
+	font-weight: 600;
 }

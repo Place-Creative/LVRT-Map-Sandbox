@@ -72,10 +72,16 @@ document.addEventListener('DOMContentLoaded', () => {
 		const description = feature.properties.description
 		const directions = feature.geometry.coordinates ? `https://www.google.com/maps/search/?api=1&query=${feature.geometry.coordinates[1]},${feature.geometry.coordinates[0]}` : ''
 
+		let parking = null
+		if (icon == 'parking') {
+			parking = feature.properties.parkingSpaces ? `<p>${feature.properties.parkingSpaces} parking spaces</p>` : ''
+		}
+
 		const template = `
 		<img class="tooltip-image" alt="${icon} Icon" src="/assets/icons/${icon}-square.svg"/>
 		<p><b>${title ? title : description ? description : ''}</b><br/></p>
 		<p>${title ? description ? description : '' : ''}</p>
+		${parking ? parking : ''}
 		<p><a href="${directions}" target="_blank" rel="norefer nofollow">Get Directions</a></p>
 		`
 
@@ -143,25 +149,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	const LVRT_FEATURES_MILEMARKERS = L.esri.featureLayer(
 		{
-			url: "https://services1.arcgis.com/NXmBVyW5TaiCXqFs/ArcGIS/rest/services/lvrt_mile_markers/FeatureServer/0",
+			url: "https://maps.vtrans.vermont.gov/arcgis/rest/services/Rail/Rail_MilePosts/MapServer/2",
+			where: "VRLID = 'VRL24' OR VRLID = 'VRL23' OR VRLID = 'VRL22' OR VRLID = 'VRL13'",
 			minZoom: 13,
 			onEachFeature: function(feature, layer) {
 				layer.bindTooltip(function() {
-					return L.Util.template(`<b>Mile Marker: {number}</b>`, layer.feature.properties);
+					console.log(layer)
+					console.log(feature)
+					return L.Util.template(`<b>Mile Marker: {MP}</b>`, layer.feature.properties);
 				})
 			},
 			pointToLayer: function(geojson, latlng) {
 				return L.marker(latlng, {
-					icon: L.icon({
-						iconUrl: "./assets/icons/milemarker-square.svg",
-						iconSize: [9, 9],
-						iconAnchor: [4, 4],
-						className: 'milemarker'
-					})
-					// icon: L.divIcon({
-					// 	className: 'milemarker',
-					// 	html: `<span>${geojson.properties.number}</span>`
+					// icon: L.icon({
+					// 	iconUrl: "./assets/icons/milemarker-square.svg",
+					// 	iconSize: [9, 9],
+					// 	iconAnchor: [4, 4],
+					// 	className: 'milemarker'
 					// })
+					icon: L.divIcon({
+						className: 'milemarker',
+						html: `<span class="icon" aria-hidden="true"></span><span class="text">${geojson.properties.MP}</span>`
+					})
 				})
 			},
 
@@ -176,7 +185,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		{
 			url: "https://services1.arcgis.com/NXmBVyW5TaiCXqFs/ArcGIS/rest/services/VT_Rail_Trails_Viewer_Public/FeatureServer/0",
 			minZoom: 10,
-			where: "HASTRAILHEAD = 1",
+			where: "HASTRAILHEAD = 1 AND isPublic = 1 AND isActive = 1",
 			onEachFeature: function(feature, layer) {
 				layer.bindPopup(function() {
 					return L.Util.template(create_tooltip(feature, 'hiking'), layer.feature.properties);
@@ -202,9 +211,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	var LVRT_FEATURES_PARKING = L.esri.featureLayer(
 		{
-			url: "https://services1.arcgis.com/NXmBVyW5TaiCXqFs/ArcGIS/rest/services/VT_Rail_Trails_Viewer_Public_Facilities/FeatureServer/0",
+			url: "https://services1.arcgis.com/NXmBVyW5TaiCXqFs/ArcGIS/rest/services/VT_Rail_Trails_Viewer_Public/FeatureServer/0",
 			minZoom: 10,
-			where: "facilityType = 11 AND isPublic = 1 AND isActive = 1 AND status = 4",
+			where: "hasParking = 1 AND isPublic = 1 AND isActive = 1",
 			onEachFeature: function(feature, layer) {
 				layer.bindPopup(function() {
 					// console.log(layer)
@@ -225,6 +234,31 @@ document.addEventListener('DOMContentLoaded', () => {
 	)
 	.addTo(map);
 
+	var LVRT_FEATURES_RESTROOMS = L.esri.featureLayer(
+		{
+			url: "https://services1.arcgis.com/NXmBVyW5TaiCXqFs/ArcGIS/rest/services/VT_Rail_Trails_Viewer_Public/FeatureServer/0",
+			minZoom: 10,
+			where: "hasRestrooms = 1 AND isPublic = 1 AND isActive = 1",
+			onEachFeature: function(feature, layer) {
+				layer.bindPopup(function() {
+					return L.Util.template(create_tooltip(feature, 'restroom'), layer.feature.properties);
+				})
+			},
+			pointToLayer: function(geojson, latlng) {
+				return L.marker(latlng, {
+					icon: L.icon({
+						iconUrl: "./assets/icons/restroom-square.svg",
+						iconSize: [18, 18],
+						iconAnchor: [9, 9],
+						className: 'test-1'
+					})
+				})
+			},
+
+		}
+	)
+	.addTo(map);
+
 	// Map Base Layers
 	const baseLayers = {
 		"Terrain": TERRAIN,
@@ -238,7 +272,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		"<img src='assets/icons/milemarker-square.svg'/><span>Milemarkers</span>": LVRT_FEATURES_MILEMARKERS,
 		"<img src='assets/icons/hiking-square.svg'/><span>Trailheads</span>": LVRT_FEATURES_TRAILHEADS,
 		"<img src='assets/icons/parking-square.svg'/><span>Parking</span>": LVRT_FEATURES_PARKING,
-		"<img src='assets/icons/restroom-square.svg'/><span>Restrooms</span>": LVRT_FEATURES_PARKING
+		"<img src='assets/icons/restroom-square.svg'/><span>Restrooms</span>": LVRT_FEATURES_RESTROOMS
 	}
 
 	// Map Controls
@@ -257,19 +291,19 @@ document.addEventListener('DOMContentLoaded', () => {
 		// 	map.removeLayer(LVRT_FEATURES_MILEMARKERS)
 		// }
 
-		if (map.getZoom() > 9 && !map.hasLayer(LVRT_FEATURES_PARKING))  {
-			map.addLayer(LVRT_FEATURES_PARKING)
-		}
-		if (map.getZoom() <= 9 && map.hasLayer(LVRT_FEATURES_PARKING))  {
-			map.removeLayer(LVRT_FEATURES_PARKING)
-		}
+		// if (map.getZoom() > 9 && !map.hasLayer(LVRT_FEATURES_PARKING))  {
+		// 	map.addLayer(LVRT_FEATURES_PARKING)
+		// }
+		// if (map.getZoom() <= 9 && map.hasLayer(LVRT_FEATURES_PARKING))  {
+		// 	map.removeLayer(LVRT_FEATURES_PARKING)
+		// }
 
-		if (map.getZoom() > 9 && !map.hasLayer(LVRT_FEATURES_TRAILHEADS))  {
-			map.addLayer(LVRT_FEATURES_TRAILHEADS)
-		}
-		if (map.getZoom() <= 9 && map.hasLayer(LVRT_FEATURES_TRAILHEADS))  {
-			map.removeLayer(LVRT_FEATURES_TRAILHEADS)
-		}
+		// if (map.getZoom() > 9 && !map.hasLayer(LVRT_FEATURES_TRAILHEADS))  {
+		// 	map.addLayer(LVRT_FEATURES_TRAILHEADS)
+		// }
+		// if (map.getZoom() <= 9 && map.hasLayer(LVRT_FEATURES_TRAILHEADS))  {
+		// 	map.removeLayer(LVRT_FEATURES_TRAILHEADS)
+		// }
 	})
 
 })
