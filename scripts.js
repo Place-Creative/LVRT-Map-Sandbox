@@ -156,7 +156,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				layer.bindTooltip(function() {
 					console.log(layer)
 					console.log(feature)
-					return L.Util.template(`<b>Mile Marker: {MP}</b>`, layer.feature.properties);
+					return L.Util.template(`<b>Milepost: {MP}</b>`, layer.feature.properties);
 				})
 			},
 			pointToLayer: function(geojson, latlng) {
@@ -269,7 +269,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	// Map Overlays
 	const overlays = {
 		"<img src='assets/icons/trail-square.svg'/><span>Trails</span>": TRAILS,
-		"<img src='assets/icons/milemarker-square.svg'/><span>Milemarkers</span>": LVRT_FEATURES_MILEMARKERS,
+		"<img src='assets/icons/milemarker-square.svg'/><span>Mileposts</span>": LVRT_FEATURES_MILEMARKERS,
 		"<img src='assets/icons/hiking-square.svg'/><span>Trailheads</span>": LVRT_FEATURES_TRAILHEADS,
 		"<img src='assets/icons/parking-square.svg'/><span>Parking</span>": LVRT_FEATURES_PARKING,
 		"<img src='assets/icons/restroom-square.svg'/><span>Restrooms</span>": LVRT_FEATURES_RESTROOMS
