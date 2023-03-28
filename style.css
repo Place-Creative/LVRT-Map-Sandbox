@@ -28,13 +28,13 @@ body {
 	z-index: 2000;
 }
 
-.leaflet-control-layers-base label:only-child {
+/* .leaflet-control-layers-base label:only-child {
 	display: none;
 }
 
 .leaflet-control-layers-base + .leaflet-control-layers-separator {
 	display: none
-}
+} */
 
 .leaflet-control-layers-overlays > label {
 	user-select: none;
@@ -61,4 +61,17 @@ body {
 	width: var(--size);
 	height: var(--size);
 	object-fit: contain;
+}
+
+.leaflet-popup-content p {
+	margin: 0.25rem 0;
+}
+
+img.tooltip-image {
+	display: block;
+	--size: 1.25rem;
+	width: var(--size);
+	height: var(--size);
+	object-fit: contain;
+	margin-bottom: 0.25rem;
 }
