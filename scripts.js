@@ -58,53 +58,42 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 	}
 
-	const trails_to_show = [
-		'LVRT',
-		'MVRT',
-		'DHRT',
-		'BBRT'
-	];
-
-	// QUERY MAP DATA
-
 	// All Rail Trail Data
 	// https://services1.arcgis.com/NXmBVyW5TaiCXqFs/ArcGIS/rest/services/VT_State_Rail_Lines_and_Trails/FeatureServer/0
 
 	var TRAILS = L.esri.featureLayer(
 		{
 			url: "https://services1.arcgis.com/NXmBVyW5TaiCXqFs/ArcGIS/rest/services/VT_State_Rail_Lines_and_Trails/FeatureServer/0",
-			fetchAllFeatures: true,
+			where: "LINENAME = 'LVRT' OR LINENAME = 'MVRT' OR LINENAME = 'DHRT' OR LINENAME = 'BBRT'",
 			onEachFeature: (feature, layer) => {
-				if (trails_to_show.includes(feature.properties.LineName)){
-					layer.bindTooltip(
-						feature.properties.LineName,
-						{
-							permanent: false,
-							direction: 'center',
-							className: 'tooltip_style',
-							interactive: true
-						}
-					)
-					layer.setText(feature.properties.LineName, {
+				// layer.bindTooltip(
+				// 	feature.properties.LineName,
+				// 	{
+				// 		permanent: false,
+				// 		direction: 'center',
+				// 		className: 'tooltip_style',
+				// 		interactive: true
+				// 	}
+				// )
+				layer.on('mouseover', () => {
+					layer.setText(trail_information[feature.properties.LineName].name, {
 						repeat: false,
 						offset: -5,
 						center: true,
 						attributes: {
 							fill: trail_information[feature.properties.LineName].color,
 							'font-weight': 'bold',
-							'font-size': '12',
+							'font-size': '13',
 						}
 					});
-				}
+				})
+				layer.on('mouseout', () => {
+					layer.setText(null)
+				})
 			},
 			style: (feature) => {
-
-				let color = 'transparent';
-				if (trails_to_show.includes(feature.properties.LineName)){
-					color = trail_information[feature.properties.LineName].color
-				}
 				return {
-					color: color,
+					color: trail_information[feature.properties.LineName].color,
 					dashArray: "5",
 					dashOffset: "2",
 					weight: "3"
@@ -122,8 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			url: "https://services1.arcgis.com/NXmBVyW5TaiCXqFs/ArcGIS/rest/services/lvrt_mile_markers/FeatureServer/0",
 			// where: "HASTRAILHEAD = 1 AND hasParking = 0",
 			onEachFeature: function(feature, layer) {
-				layer.bindPopup(function() {
-					console.log(layer.feature.properties)
+				layer.bindTooltip(function() {
 					return L.Util.template(`<b>Mile Marker: {number}</b>`, layer.feature.properties);
 				})
 			},
@@ -218,5 +206,30 @@ document.addEventListener('DOMContentLoaded', () => {
 		'collapsed': false,
 		'position': 'bottomright'
 	}).addTo(map)
+
+	map.on('zoomend', function() {
+		console.log("Current Zoom Level = " + map.getZoom());
+
+		if (map.getZoom() > 10 && !map.hasLayer(LVRT_FEATURES_MILEMARKERS))  {
+			map.addLayer(LVRT_FEATURES_MILEMARKERS)
+		}
+		if (map.getZoom() <= 10 && map.hasLayer(LVRT_FEATURES_MILEMARKERS))  {
+			map.removeLayer(LVRT_FEATURES_MILEMARKERS)
+		}
+
+		if (map.getZoom() > 9 && !map.hasLayer(LVRT_FEATURES_PARKING))  {
+			map.addLayer(LVRT_FEATURES_PARKING)
+		}
+		if (map.getZoom() <= 9 && map.hasLayer(LVRT_FEATURES_PARKING))  {
+			map.removeLayer(LVRT_FEATURES_PARKING)
+		}
+
+		if (map.getZoom() > 9 && !map.hasLayer(LVRT_FEATURES_TRAILHEADS))  {
+			map.addLayer(LVRT_FEATURES_TRAILHEADS)
+		}
+		if (map.getZoom() <= 9 && map.hasLayer(LVRT_FEATURES_TRAILHEADS))  {
+			map.removeLayer(LVRT_FEATURES_TRAILHEADS)
+		}
+	})
 
 })
