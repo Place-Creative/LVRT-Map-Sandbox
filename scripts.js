@@ -78,7 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 
 		const template = `
-		<img class="tooltip-image" alt="${icon} Icon" src="/assets/icons/${icon}-square.svg"/>
+		<img class="tooltip-image" alt="${icon} Icon" src="assets/icons/${icon}-square.svg"/>
 		<p><b>${title ? title : description ? description : ''}</b><br/></p>
 		<p>${title ? description ? description : '' : ''}</p>
 		${parking ? parking : ''}
