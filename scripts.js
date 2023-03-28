@@ -1,20 +1,31 @@
+let cursor = {
+	x: 0,
+	y: 0
+}
+
+window.addEventListener('mousemove', () => {
+
+})
+
 document.addEventListener('DOMContentLoaded', () => {
 
+
+	// GLOBAL MAP DEFINITIONS
 	const apiKey = "AAPK7f7375fcf29f4a7281b7b4d3eadb12abevbloJc-GM_mROEEHDATdX95ri0jPxl3WAo5oszGdXUxUTZQx8BNLNOPGDyTYD4_";
 
-	const map = L.map('map').setView(
-		[44.0342182, -72.0556608], //lat/lng
-		9 //zoom
-	);
+	// Map Layers
+	const TERRAIN = L.esri.Vector.vectorBasemapLayer('ArcGIS:Terrain', {
+		apikey: apiKey
+	})
 
-	L.esri.Vector.vectorBasemapLayer(
-		'ArcGIS:Terrain', {
-			apikey: apiKey
-		}
-	).addTo(map);
+	// Create the map
+	const map = L.map('map', {
+		center: [44.0342182, -72.0556608],
+		zoom: 9,
+		layers: [TERRAIN]
+	})
 
-	map.createPane("bikeTrails");
-
+	// State of Vermont outline
 	L.geoJson(statesData, {
 		color: 'red',
 		opacity: 0.2,
@@ -22,60 +33,131 @@ document.addEventListener('DOMContentLoaded', () => {
 		fillOpacity: 0.02
 	}).addTo(map);
 
-	const trails_to_render = [
+	// GLOBAL TRAIL DEFINITIONS
+
+	const trail_information = {
+		'LVRT': {
+			label: 'LVRT',
+			name: 'Lamoille Valley Rail Trail',
+			color: 'rgba(0, 169, 230, 1)',
+		},
+		'MVRT': {
+			label: 'MVRT',
+			name: 'Missisquoi Valley Rail Trail',
+			color: 'rgba(182, 191, 11, 1)',
+		},
+		'DHRT': {
+			label: 'DHRT',
+			name: 'Delaware & Hudson Rail Trail',
+			color: 'rgba(210, 73, 42, 1)',
+		},
+		'BBRT': {
+			label: 'BBRT',
+			name: 'Beebe Spur Rail Trail',
+			color: 'rgba(205, 48, 252, 1)',
+		}
+	}
+
+	const trails_to_show = [
 		'LVRT',
 		'MVRT',
 		'DHRT',
 		'BBRT'
 	];
 
-	var trails = L.esri.featureLayer(
+	// QUERY MAP DATA
+
+	// All Rail Trail Data
+	// https://services1.arcgis.com/NXmBVyW5TaiCXqFs/ArcGIS/rest/services/VT_State_Rail_Lines_and_Trails/FeatureServer/0
+
+	var TRAILS = L.esri.featureLayer(
 		{
 			url: "https://services1.arcgis.com/NXmBVyW5TaiCXqFs/ArcGIS/rest/services/VT_State_Rail_Lines_and_Trails/FeatureServer/0",
-			pane: 'bikeTrails',
 			fetchAllFeatures: true,
-			onEachFeature: (feature) => {
-				// console.log(feature)
+			onEachFeature: (feature, layer) => {
+				if (trails_to_show.includes(feature.properties.LineName)){
+					layer.bindTooltip(
+						feature.properties.LineName,
+						{
+							permanent: false,
+							direction: 'center',
+							className: 'tooltip_style',
+							interactive: true
+						}
+					)
+					layer.setText(feature.properties.LineName, {
+						repeat: false,
+						offset: -5,
+						center: true,
+						attributes: {
+							fill: trail_information[feature.properties.LineName].color,
+							'font-weight': 'bold',
+							'font-size': '12',
+						}
+					});
+				}
 			},
 			style: (feature) => {
 
 				let color = 'transparent';
-				if (trails_to_render.includes(feature.properties.LineName)){
-					color = 'red'
-
-					if (feature.properties.LineName === 'LVRT') {
-						color = 'green'
-					}
-					if (feature.properties.LineName === 'MVRT') {
-						color = 'purple'
-					}
-					if (feature.properties.LineName === 'BBRT') {
-						color = 'orange'
-					}
-					if (feature.properties.LineName === 'CLP' || feature.properties.LineName === 'DHRT') {
-						color = 'blue'
-					}
+				if (trails_to_show.includes(feature.properties.LineName)){
+					color = trail_information[feature.properties.LineName].color
 				}
-
 				return {
-				  color: color,
-				//   dashArray: "5",
-				//   dashOffset: "2",
-				  weight: "3"
-				};
+					color: color,
+					dashArray: "5",
+					dashOffset: "2",
+					weight: "3"
+				  };
 			  }
 		}
 	)
 	.addTo(map);
 
-	trails.bindPopup(function (layer) {
-		return L.Util.template("<b>{LineName}</b><br>Miles: {TotalMiles}</br>", layer.feature.properties);
-	});
+	// LVRT Milemarker data
+	// https://services1.arcgis.com/NXmBVyW5TaiCXqFs/ArcGIS/rest/services/lvrt_mile_markers/FeatureServer
+
+	const LVRT_FEATURES_MILEMARKERS = L.esri.featureLayer(
+		{
+			url: "https://services1.arcgis.com/NXmBVyW5TaiCXqFs/ArcGIS/rest/services/lvrt_mile_markers/FeatureServer/0",
+			// where: "HASTRAILHEAD = 1 AND hasParking = 0",
+			onEachFeature: function(feature, layer) {
+				layer.bindPopup(function() {
+					console.log(layer.feature.properties)
+					return L.Util.template(`<b>Mile Marker: {number}</b>`, layer.feature.properties);
+				})
+			},
+			pointToLayer: function(geojson, latlng) {
+				return L.marker(latlng, {
+					icon: L.icon({
+						iconUrl: "./assets/icons/milemarker-square.svg",
+						iconSize: [6, 6],
+						iconAnchor: [3, 3],
+						className: 'milemarker'
+					})
+					// icon: L.divIcon({
+					// 	className: 'milemarker',
+					// 	html: `<span>${geojson.properties.number}</span>`
+					// })
+				})
+			},
+
+		}
+	)
+	.addTo(map);
+
+	// All trailhead data for LVRT
+	// https://services1.arcgis.com/NXmBVyW5TaiCXqFs/ArcGIS/rest/services/VT_Rail_Trails_Viewer_Public/FeatureServer/0
 
 	var LVRT_FEATURES_TRAILHEADS = L.esri.featureLayer(
 		{
 			url: "https://services1.arcgis.com/NXmBVyW5TaiCXqFs/ArcGIS/rest/services/VT_Rail_Trails_Viewer_Public/FeatureServer/0",
 			where: "HASTRAILHEAD = 1 AND hasParking = 0",
+			onEachFeature: function(feature, layer) {
+				layer.bindPopup(function() {
+					return L.Util.template(`<b>Title: {displayName}</b><br/>Description: {description}<br/>Town: {town}<br/>Type: Trailhead`, layer.feature.properties);
+				})
+			},
 			pointToLayer: function(geojson, latlng) {
 				return L.marker(latlng, {
 					icon: L.icon({
@@ -85,21 +167,24 @@ document.addEventListener('DOMContentLoaded', () => {
 						className: 'test-1'
 					})
 				})
-			}
+			},
+
 		}
 	)
 	.addTo(map);
 
-	LVRT_FEATURES_TRAILHEADS.bindPopup(function (layer) {
-		console.log('trailhead')
-		console.log(layer.feature.properties)
-		return L.Util.template(`<b>Title: {displayName}</b><br/>Description: {description}<br/>Town: {town}<br/>Type: Trailhead`, layer.feature.properties);
-	});
+	// All parking data for LVRT
+	// https://services1.arcgis.com/NXmBVyW5TaiCXqFs/ArcGIS/rest/services/VT_Rail_Trails_Viewer_Public_Facilities/FeatureServer/0
 
 	var LVRT_FEATURES_PARKING = L.esri.featureLayer(
 		{
 			url: "https://services1.arcgis.com/NXmBVyW5TaiCXqFs/ArcGIS/rest/services/VT_Rail_Trails_Viewer_Public_Facilities/FeatureServer/0",
 			where: "facilityType = 11 AND isPublic = 1 AND isActive = 1 AND status = 4",
+			onEachFeature: function(feature, layer) {
+				layer.bindPopup(function() {
+					return L.Util.template(`<b>Title: {displayName}</b><br/>Description: {description}<br/>Town: {town}<br/>Type: Parking`, layer.feature.properties);
+				})
+			},
 			pointToLayer: function(geojson, latlng) {
 				return L.marker(latlng, {
 					icon: L.icon({
@@ -114,43 +199,24 @@ document.addEventListener('DOMContentLoaded', () => {
 	)
 	.addTo(map);
 
-	LVRT_FEATURES_PARKING.bindPopup(function (layer) {
-		console.log('parking')
-		console.log(layer.feature.properties)
-		return L.Util.template(`<b>Title: {displayName}</b><br/>Description: {description}<br/>Town: {town}<br/>Type: Parking`, layer.feature.properties);
-	});
+	// Map Base Layers
+	const baseLayers = {
+		"Terrain": TERRAIN
+	}
 
-	// L.esri.get("./data/VTrans_RailTrail_Map_Layers", {}, function (error, response) {
-    //     if (error) {
-    //       return;
-    //     }
+	// Map Overlays
+	const overlays = {
+		"<img src='assets/icons/trail-square.svg'/><span>Trails</span>": TRAILS,
+		"<img src='assets/icons/milemarker-square.svg'/><span>Milemarkers</span>": LVRT_FEATURES_MILEMARKERS,
+		"<img src='assets/icons/hiking-square.svg'/><span>Trailheads</span>": LVRT_FEATURES_TRAILHEADS,
+		"<img src='assets/icons/parking-square.svg'/><span>Parking</span>": LVRT_FEATURES_PARKING,
+		"<img src='assets/icons/restroom-square.svg'/><span>Restrooms</span>": LVRT_FEATURES_PARKING
+	}
 
-	// 	console.log(response)
-
-    //     const arcGISFeatures = response.features;
-    //     // const idField = response.operationalLayers[0].featureCollection.layers[0].layerDefinition.objectIdField;
-
-    //     // empty geojson feature collection
-    //     const geoJSONFeatureCollection = {
-    //       type: "FeatureCollection",
-    //       features: []
-    //     };
-
-    //     for (let i = arcGISFeatures.length - 1; i >= 0; i--) {
-    //       // convert ArcGIS Feature to GeoJSON Feature
-    //       const geoJSONFeature = L.esri.Util.arcgisToGeoJSON(arcGISFeatures[i], i);
-
-	// 	  console.log(geoJSONFeature);
-
-    //       // unproject the web mercator coordinates to lat/lng
-    //       const latlng = L.Projection.Mercator.unproject(L.point(geoJSONFeature.geometry.coordinates));
-    //       geoJSONFeature.geometry.coordinates = [latlng.lng, latlng.lat];
-
-    //       geoJSONFeatureCollection.features.push(geoJSONFeature);
-    //     }
-
-    //     const geojsonLayer = L.geoJSON(geoJSONFeatureCollection).addTo(map);
-    //     map.fitBounds(geojsonLayer.getBounds());
-    //   });
+	// Map Controls
+	L.control.layers(baseLayers, overlays, {
+		'collapsed': false,
+		'position': 'bottomright'
+	}).addTo(map)
 
 })

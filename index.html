@@ -17,6 +17,8 @@
 	<!-- Load Esri Leaflet Vector from CDN -->
     <script src="https://unpkg.com/esri-leaflet-vector@4.0.1/dist/esri-leaflet-vector.js" crossorigin=""></script>
 
+	<script src="./assets/scripts/leaflet.textpath.js" crossorigin=""></script>
+
 
     <script src="./data/vermont.js" crossorigin=""></script>
 
@@ -28,7 +30,42 @@
 </head>
 <body>
 
-	<div id="map"></div>
+	<div id="map">
+
+		<l-control position="bottomleft">
+			<div class="map-legend">
+				<div class="map-legend-title">Percent of town</div>
+				<div class="map-legend-item">
+					<span
+						data-status="1"
+						class="map-legend-item--swatch"
+					></span>
+					<p class="map-legend-item--label">> 0 - 25%</p>
+				</div>
+				<div class="map-legend-item">
+					<span
+						data-status="2"
+						class="map-legend-item--swatch"
+					></span>
+					<p class="map-legend-item--label">> 25 - 50%</p>
+				</div>
+				<div class="map-legend-item">
+					<span
+						data-status="3"
+						class="map-legend-item--swatch"
+					></span>
+					<p class="map-legend-item--label">> 50 - 75%</p>
+				</div>
+				<div class="map-legend-item">
+					<span
+						data-status="4"
+						class="map-legend-item--swatch"
+					></span>
+					<p class="map-legend-item--label">> 75 - 100%</p>
+				</div>
+			</div>
+		</l-control>
+	</div>
 	<!-- <div id="filters">
 		<button id="trailsOnOff">Toggle Trails</button>
 		<button data-layer="2">Toggle Features</button>
