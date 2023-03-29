@@ -67,17 +67,65 @@ body {
 	margin: 0.25rem 0;
 }
 
+#map .leaflet-popup-content > h3 {
+	margin-top: 1.25rem;
+	/* border-bottom: 1px solid #ddd; */
+	margin-bottom: 0.25rem;
+	/* padding-bottom: 0.125rem; */
+}
+
+.tooltip-address {
+	font-style: normal
+}
+
+.tooltip-grid {
+	display: grid;
+	grid-gap: 1rem;
+	margin: 0.5rem 0;
+}
+
+.tooltip-grid:empty {
+	display: none
+}
+
+.tooltip-grid[data-count="2"] {
+	grid-template-columns: repeat(2, 1fr);
+}
+
+.tooltip-grid[data-count="3"] {
+	grid-template-columns: repeat(3, 1fr);
+}
+
+.tooltip-grid .grid-cell-label {
+	border-bottom: 1px solid #ddd;
+	margin-bottom: 0.125rem;
+	padding-bottom: 0.125rem;
+	font-weight: 600;
+}
+
+.tooltip-icons {
+	position: absolute;
+	top: 0;
+	transform: translateY(-45%);
+	display: flex;
+	gap: 0.25rem;
+}
+
 img.tooltip-image {
 	display: block;
-	--size: 1.25rem;
+	--size: 1.65rem;
 	width: var(--size);
 	height: var(--size);
 	object-fit: contain;
 	margin-bottom: 0.25rem;
 }
 
+.milemarker {
+
+}
+
 .milemarker span.icon {
-	--size: 0.75rem;
+	--size: 0.65rem;
 	display: flex;
 	background-image: url('./assets/icons/milemarker-square.svg');
 	background-size: contain;
@@ -85,8 +133,13 @@ img.tooltip-image {
 	background-position: center center;
 	width: var(--size);
     height: var(--size);
+	margin: 0.25rem auto;
 }
 
 .milemarker span.text {
+	display: block;
 	font-weight: 600;
+	line-height: 1;
+	text-align: center;
+	font-size: 0.65rem;
 }
